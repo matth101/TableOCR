@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 from collections import deque, defaultdict
 
 # Function for flood fill using BFS
-def flood_fill_bfs(img, x, y, color_of_point, paint_color):
+def flood_fill_bfs(img, x, y, color_of_point, paint_color, label):
     top_left = (x, y)
     bottom_right = (-1, -1)
     order = []
@@ -13,6 +12,7 @@ def flood_fill_bfs(img, x, y, color_of_point, paint_color):
     while queue:
         current_x, current_y = queue.popleft()
         order.append((current_x, current_y))
+        img[current_x, current_y] = label
         neighbors = [
             (current_x - 1, current_y),
             (current_x + 1, current_y),
@@ -43,7 +43,6 @@ def flood_fill_bfs(img, x, y, color_of_point, paint_color):
                 queue.append((neighbor_x, neighbor_y))
     return top_left, bottom_right, order
 
-
 # Load image
 img = cv2.imread("TestTable.png", cv2.IMREAD_GRAYSCALE)
 
@@ -68,11 +67,14 @@ x, y = find_first_coord(img, most_common_color)
 row_table = defaultdict(list)
 col_table = defaultdict(list)
 
+# Counter for unique labels
+label_counter = 1
+
 while x < len(img):
     while y < len(img[0]) - 1:
         if img[x, y] == most_common_color:
             start, end, order = flood_fill_bfs(
-                img, x, y, most_common_color, most_common_color - 1
+                img, x, y, most_common_color, most_common_color - 1, label_counter
             )
             cell_coordinates.append((start, end))
             order_of_cells.extend(order)
@@ -82,32 +84,27 @@ while x < len(img):
             # Update row and column tables
             row_index = start[1]
             col_index = start[0]
-            row_table[row_index].append((start, end))
-            col_table[col_index].append((start, end))
+            row_table[row_index].append(label_counter)
+            col_table[col_index].append(label_counter)
+
+            # Increment label counter for the next cell
+            label_counter += 1
         y += 1
     y = 0
     x += 1
 
-# Sort cell coordinates based on starting point
-cell_coordinates_sorted = sorted(cell_coordinates, key=lambda x: x[0])
+# Determine the number of rows and columns
+num_rows = len(row_table)
+num_cols = len(col_table)
 
-# Display processed image
-plt.imshow(img, interpolation="nearest", cmap="gray")
-plt.show()
+# Create a 2D array where each index corresponds to a cell
+table_array = np.zeros((num_rows, num_cols), dtype=int)
 
-# Print sorted order of cell coordinates
-print("Sorted Order of Cell Coordinates:")
-print(cell_coordinates_sorted)
+for start, end in cell_coordinates:
+    label = img[start[0], start[1]]
+    row_index = row_table[start[1]].index(label)
+    col_index = col_table[start[0]].index(label)
+    table_array[row_index, col_index] = label
 
-# Print rows and columns
-print("\nRow Table:")
-for row_index, cells in row_table.items():
-    print(f"Row {row_index}:")
-    for cell in cells:
-        print(f"  {cell}")
-
-print("\nColumn Table:")
-for col_index, cells in col_table.items():
-    print(f"Column {col_index}:")
-    for cell in cells:
-        print(f"  {cell}")
+# Print the table array
+print(table_array)
