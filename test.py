@@ -7,16 +7,12 @@ class ImageViewerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Image Viewer")
-        self.root.geometry("800x600")  # Set your desired initial dimensions
 
-        self.canvas = tk.Canvas(self.root)
-        self.canvas.pack(expand="yes", fill="both")
+        self.load_button = ttk.Button(root, text="Load Image", command=self.load_image)
+        self.load_button.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
-        self.load_button = ttk.Button(self.root, text="Load Image", command=self.load_image)
-        self.load_button.pack(side=tk.LEFT, padx=10, pady=10)
-
-        self.convert_button = ttk.Button(self.root, text="Convert and Save", command=self.convert_and_save)
-        self.convert_button.pack(side=tk.RIGHT, padx=10, pady=10)
+        self.convert_button = ttk.Button(root, text="Convert and Save", command=self.convert_and_save)
+        self.convert_button.grid(row=0, column=1, padx=10, pady=10, sticky="e")
 
         self.image_path = None
         self.current_image = None
@@ -29,11 +25,16 @@ class ImageViewerApp:
             self.display_image()
 
     def display_image(self):
+        sub_window = tk.Toplevel(self.root)
+        sub_window.title("Image Viewer")
+        
         image = Image.open(self.image_path)
-        image = image.resize((self.root.winfo_width(), self.root.winfo_height()))
+        image.thumbnail((800, 600))  # Adjust the dimensions as needed
         self.current_image = ImageTk.PhotoImage(image)
-        self.canvas.config(width=image.width, height=image.height)
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.current_image)
+
+        canvas = tk.Canvas(sub_window, width=image.width, height=image.height)
+        canvas.pack(expand="yes", fill="both")
+        canvas.create_image(0, 0, anchor=tk.NW, image=self.current_image)
 
     def convert_and_save(self):
         if self.current_image:
