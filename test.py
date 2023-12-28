@@ -8,11 +8,14 @@ class ImageViewerApp:
         self.root = root
         self.root.title("Image Viewer")
 
+        self.frame = ttk.Frame(root)
+        self.frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
         self.load_button = ttk.Button(root, text="Load Image", command=self.load_image)
-        self.load_button.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        self.load_button.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
         self.convert_button = ttk.Button(root, text="Convert and Save", command=self.convert_and_save)
-        self.convert_button.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+        self.convert_button.grid(row=1, column=1, padx=10, pady=10, sticky="e")
 
         self.image_path = None
         self.current_image = None
@@ -25,14 +28,14 @@ class ImageViewerApp:
             self.display_image()
 
     def display_image(self):
-        sub_window = tk.Toplevel(self.root)
-        sub_window.title("Image Viewer")
-        
+        if self.current_image:
+            self.current_image.destroy()
+
         image = Image.open(self.image_path)
         image.thumbnail((800, 600))  # Adjust the dimensions as needed
         self.current_image = ImageTk.PhotoImage(image)
 
-        canvas = tk.Canvas(sub_window, width=image.width, height=image.height)
+        canvas = tk.Canvas(self.frame, width=image.width, height=image.height)
         canvas.pack(expand="yes", fill="both")
         canvas.create_image(0, 0, anchor=tk.NW, image=self.current_image)
 
