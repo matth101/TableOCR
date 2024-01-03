@@ -2,3 +2,4 @@ R-CNNFineTuned_10000.pth filter=lfs diff=lfs merge=lfs -text
 RowCol.pth filter=lfs diff=lfs merge=lfs -text
 huggingface/model.safetensors filter=lfs diff=lfs merge=lfs -text
 huggingface/pytorch_model.bin filter=lfs diff=lfs merge=lfs -text
+huggingface/modelnew.safetensors filter=lfs diff=lfs merge=lfs -text
