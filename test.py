@@ -1,52 +1,54 @@
-import tkinter as tk
-from tkinter import ttk, filedialog
-from PIL import Image, ImageTk
-import numpy as np
+import pandas as pd
 
-class ImageViewerApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Image Viewer")
+def isolate_cells(image, row_boxes, col_boxes, label_ids, id2label):
+    row_boxes = sorted(row_boxes, key=lambda x: (x[1], x[0]))  # Sort by ymin and then xmin
+    col_boxes = sorted(col_boxes, key=lambda x: (x[0], x[1]))  # Sort by xmin and then ymin
+    
+    cell_data = []
+    
+    for row_index, row_box in enumerate(row_boxes):
+        for col_index, col_box in enumerate(col_boxes):
+            # Extract coordinates for the current cell
+            xmin_row, ymin_row, xmax_row, ymax_row = map(int, row_box)
+            xmin_col, ymin_col, xmax_col, ymax_col = map(int, col_box)
+            
+            # Crop the current cell from the image
+            cell_image = image.crop((xmin_col, ymin_row, xmax_col, ymax_row))
+            
+            # Add cell data to the list
+            cell_data.append((cell_image, row_index, col_index))
+    
+    # Sort the cell data based on row and column indices
+    cell_data.sort(key=lambda x: (x[1], x[2]))
+    
+    return cell_data
 
-        self.frame = ttk.Frame(root)
-        self.frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+# Example usage:
+row_label_id = model.config.label2id['table row']
+col_label_id = model.config.label2id['table column']
 
-        self.load_button = ttk.Button(root, text="Load Image", command=self.load_image)
-        self.load_button.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+row_boxes = results['boxes'][results['labels'] == row_label_id]
+col_boxes = results['boxes'][results['labels'] == col_label_id]
 
-        self.convert_button = ttk.Button(root, text="Convert and Save", command=self.convert_and_save)
-        self.convert_button.grid(row=1, column=1, padx=10, pady=10, sticky="e")
+isolated_cells_data = isolate_cells(image, row_boxes, col_boxes, [row_label_id, col_label_id], model.config.id2label)
 
-        self.image_path = None
-        self.current_image = None
+# Create a DataFrame from the isolated cell data
+columns = ['Row', 'Column', 'Image_Path']
+df_cells = pd.DataFrame(columns=columns)
 
-    def load_image(self):
-        file_path = filedialog.askopenfilename(title="Select Image", filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
+rows_list = []
 
-        if file_path:
-            self.image_path = file_path
-            self.display_image()
+# Save or display the isolated cell images and update the list
+for i, (cell_image, row_index, col_index) in enumerate(isolated_cells_data):
+    image_path = f'isolated_cell_{i}.png'
+    cell_image.save(image_path)
+    rows_list.append({'Row': row_index, 'Column': col_index, 'Image_Path': image_path})
 
-    def display_image(self):
-        if self.current_image:
-            self.current_image.destroy()
+# Create a DataFrame from the list
+df_cells = pd.DataFrame(rows_list)
 
-        image = Image.open(self.image_path)
-        image.thumbnail((800, 600))  # Adjust the dimensions as needed
-        self.current_image = ImageTk.PhotoImage(image)
+# Sort the DataFrame based on Row and Column columns
+df_cells = df_cells.sort_values(by=['Row', 'Column']).reset_index(drop=True)
 
-        canvas = tk.Canvas(self.frame, width=image.width, height=image.height)
-        canvas.pack(expand="yes", fill="both")
-        canvas.create_image(0, 0, anchor=tk.NW, image=self.current_image)
-
-    def convert_and_save(self):
-        if self.current_image:
-            image = Image.open(self.image_path)
-            numpy_array = np.array(image)
-            print(numpy_array)
-            # Save the numpy array to a file if needed
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = ImageViewerApp(root)
-    root.mainloop()
+# Display the sorted DataFrame
+print(df_cells)
