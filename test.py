@@ -1,15 +1,5 @@
-def is_cell_within_spanning(cell_bbox, spanning_bbox):
-    xmin_cell, ymin_cell, xmax_cell, ymax_cell = cell_bbox
-    xmin_span, ymin_span, xmax_span, ymax_span = spanning_bbox
+def is_bbox_intersecting(bbox1, bbox2):
+    x_min1, y_min1, x_max1, y_max1 = bbox1
+    x_min2, y_min2, x_max2, y_max2 = bbox2
 
-    return (xmin_cell >= xmin_span and
-            xmax_cell <= xmax_span and
-            ymin_cell >= ymin_span and
-            ymax_cell <= ymax_span)
-
-# Example usage:
-cell_bbox = (10, 20, 30, 40)
-spanning_bbox = (5, 15, 35, 45)
-
-result = is_cell_within_spanning(cell_bbox, spanning_bbox)
-print(result)  # This will print True if the cell is within the spanning cell, otherwise False
+    return not (x_max1 < x_min2 or x_min1 > x_max2 or y_max1 < y_min2 or y_min1 > y_max2)
